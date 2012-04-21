@@ -4,7 +4,7 @@
  *
  * Example:
  *   nwatch . build-all
- * assuming build is an executable script
+ * assuming build-all is an executable script
  *
  * Built for Windows, since I needed it. No fancy options, just what I need.
  */
@@ -31,20 +31,51 @@ if (!shellcommand)
 	return
 }
 
-// Used to debounce the shell command execution
-var debouncer = null
+// Used to keep track of file operations
+var Events = {
+	// Contains all the events since last clear
+	results:{},
+
+	// Add a new file operation to the events map
+	add: function (filename, operation) {
+		this.results[filename] = [filename, " ", operation, "d"].join('')
+		return this
+	},
+
+	// Print to screen
+	print: function () {
+		var results = this.results
+
+		for (var filename in results)
+		{
+			console.log(results[filename])
+		}
+
+		return this
+	},
+
+	// Empty the events map
+	clear: function () {
+		this.results = {}
+		return this
+	}
+}
 
 var commandExecutedHandler = function (error, stdout, stderr) {
 	console.log(stdout)
 	stderr && console.log('Error: ', stderr)
 }
 
+// Used to debounce the shell command execution
+var debouncer = null
 var debouncedChangeHandler = function (event, filename) {
 	clearTimeout(debouncer)
+	Events.add(filename, event)
+
 	debouncer = setTimeout(function () {
-		console.log("%s %sd", filename, event)
+		Events.print().clear()
 		exec(shellcommand, commandExecutedHandler)
-	}, 1)
+	}, 500)
 }
 
 // Core Execution
