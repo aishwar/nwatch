@@ -31,16 +31,21 @@ if (!shellcommand)
 	return
 }
 
-// Core Execution
-filename = path.resolve(filename)
-fs.watch(filename, function (event, filename) {
-	console.log('%s %sd', filename, event)
-	exec(shellcommand, function (error, stdout, stderr) {
-		console.log('Output: ', stdout)
+// Used to debounce the shell command execution
+var debouncer = null
 
-		if (stderr)
-		{
-			stderr && console.error('Error: ', stderr)
-		}
-	})
-})
+var commandExecutedHandler = function (error, stdout, stderr) {
+	console.log(stdout)
+	stderr && console.log('Error: ', stderr)
+}
+
+var debouncedChangeHandler = function (event, filename) {
+	clearTimeout(debouncer)
+	debouncer = setTimeout(function () {
+		console.log("%s %sd", filename, event)
+		exec(shellcommand, commandExecutedHandler)
+	}, 1)
+}
+
+// Core Execution
+fs.watch(path.resolve(filename), debouncedChangeHandler)
