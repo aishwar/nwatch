@@ -1,0 +1,1 @@
+@echo.|set /P=Test scipt executed
