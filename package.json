@@ -1,6 +1,6 @@
 {
 "name":"nwatch",
-"version":"0.0.1",
+"version":"0.0.2",
 "description":"Watch file system for change and execute shell command",
 "keywords":["watch","file","execute"],
 "author":"Aishwar Muthuraman <aishwar@gmail.com> (http://floatingpoint.ca/)",

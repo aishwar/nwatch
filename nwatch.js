@@ -13,7 +13,7 @@ var program = require('commander')
 var path = require('path')
 var fs = require('fs')
 var exec = require('child_process').exec
-var version = '0.0.1'
+var version = '0.0.2'
 
 // Used to keep track of file operations
 var Events = {
