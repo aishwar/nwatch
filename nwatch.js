@@ -105,8 +105,8 @@ var getAllSubDirectories = function (filepath, directories) {
 	}
 }
 
-var shouldBeExcluded = function (element, index, array) {
-	return (program.exclude) ? !program.exclude.test(element) : false
+var shouldBeIncluded = function (element, index, array) {
+	return (program.exclude) ? !program.exclude.test(element) : true
 }
 
 var main = function () {
@@ -121,11 +121,18 @@ var main = function () {
 	{
 		var directories = [ filepath ]
 		getAllSubDirectories(filepath, directories)
-		directories = directories.filter(shouldBeExcluded)
 
 		if (program.verbose)
 		{
-			console.info('Watching:')
+			console.info('Complete directory list:')
+			console.info(directories.join('\n'))
+		}
+
+		directories = directories.filter(shouldBeIncluded)
+
+		if (program.verbose)
+		{
+			console.info('Filtered list to watch:')
 			console.info(directories.join('\n'))
 		}
 
