@@ -55,6 +55,7 @@ var convertToRegex = function (rawExpr)
 
 program
 	.version(version)
+	.option('-R, --recursive', 'If watching a directory, watches for changes in sub-directories as well')
 	.option('-e, --filter <expr>', 
 		'Notifies only when a file matching the filter changes. Useful when watching directories', 
 		convertToRegex, /.*/)
@@ -89,5 +90,36 @@ var debouncedChangeHandler = function (event, filename) {
 	}
 }
 
+var getAllSubDirectories = function (filepath, directories) {
+	var files = fs.readdirSync(filepath)
+
+	for (var i = 0; i < files.length; i++)
+	{
+		var file = path.join(filepath, files[i])
+
+		if (fs.statSync(file).isDirectory())
+		{
+			directories.push(file)
+			getAllSubDirectories(file, directories)
+		}
+	}
+}
+
+var filepath = path.resolve(program.file)
+var isFile = fs.statSync(filepath).isFile()
+
 // Core Execution
-fs.watch(path.resolve(program.file), debouncedChangeHandler)
+if (isFile || !program.recursive)
+{
+	fs.watch(path.resolve(program.file), debouncedChangeHandler)
+}
+else
+{
+	var directories = [ filepath ]
+	getAllSubDirectories(filepath, directories)
+
+	for (var i = 0; i < directories.length; i++)
+	{
+		fs.watch(directories[i], debouncedChangeHandler)
+	}
+}
