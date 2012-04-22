@@ -13,7 +13,7 @@ var program = require('commander')
 var path = require('path')
 var fs = require('fs')
 var exec = require('child_process').exec
-var version = '0.0.2'
+var version = '0.0.3'
 
 // Used to keep track of file operations
 var Events = {
@@ -22,7 +22,7 @@ var Events = {
 
 	// Add a new file operation to the events map
 	add: function (filename, operation) {
-		this.results[filename] = [filename, " ", operation, "d"].join('')
+		this.results[filename] = [filename, ' ', operation, 'd'].join('')
 		return this
 	},
 
@@ -55,12 +55,12 @@ var convertToRegex = function (rawExpr)
 
 program
 	.version(version)
-	.option('-R, --recursive', 'If watching a directory, watches for changes in sub-directories as well')
-	.option('-e, --filter <expr>', 
-		'Notifies only when a file matching the filter changes. Useful when watching directories', 
-		convertToRegex, /.*/)
-	.option('-r, --run <cmd>', 'Runs the given command when a change notice is generated')
-	.option('-f, --file <file>', 'Watches this file|directory for changes')
+	.option('-R, --recursive', 'watches for changes in sub-directories as well')
+	.option('-e, --filter <pattern>', 'notifies only when a file matching the pattern changes', convertToRegex, /.*/)
+	.option('-r, --run <cmd>', 'runs the given command when a change notice is generated')
+	.option('-f, --file <file>', '[REQUIRED] watches the given file|directory for changes')
+	.option('-x, --exclude <pattern>', 'excludes directories matching this pattern from being watched', convertToRegex)
+	.option('-v, --verbose', 'prints detailed information during execution')
 	.parse(process.argv)
 
 // Perform filename validation
@@ -105,21 +105,35 @@ var getAllSubDirectories = function (filepath, directories) {
 	}
 }
 
-var filepath = path.resolve(program.file)
-var isFile = fs.statSync(filepath).isFile()
-
-// Core Execution
-if (isFile || !program.recursive)
-{
-	fs.watch(path.resolve(program.file), debouncedChangeHandler)
+var shouldBeExcluded = function (element, index, array) {
+	return (program.exclude) ? !program.exclude.test(element) : false
 }
-else
-{
-	var directories = [ filepath ]
-	getAllSubDirectories(filepath, directories)
 
-	for (var i = 0; i < directories.length; i++)
+var main = function () {
+	var filepath = path.resolve(program.file)
+	var isFile = fs.statSync(filepath).isFile()
+
+	if (isFile || !program.recursive)
 	{
-		fs.watch(directories[i], debouncedChangeHandler)
+		fs.watch(path.resolve(program.file), debouncedChangeHandler)
+	}
+	else
+	{
+		var directories = [ filepath ]
+		getAllSubDirectories(filepath, directories)
+		directories = directories.filter(shouldBeExcluded)
+
+		if (program.verbose)
+		{
+			console.info('Watching:')
+			console.info(directories.join('\n'))
+		}
+
+		for (var i = 0; i < directories.length; i++)
+		{
+			fs.watch(directories[i], debouncedChangeHandler)
+		}
 	}
 }
+
+main()
