@@ -1,3 +1,4 @@
 syntax: glob
 nwatch.sublime-workspace
 nwatch.sublime-project
+node_modules/*
