@@ -22,6 +22,6 @@ the `--filter` expression is a regular expression (with 2 expceptions; read on).
 Example:
 ========
 
-    nwatch --file . --filter *.(jade|styl) --run build-web
+    nwatch --file . --filter "*.(jade|styl)" --run build-web
 
 assuming `build-web` is an executable script.
