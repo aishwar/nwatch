@@ -58,17 +58,10 @@ program
 	.option('-R, --recursive', 'watches for changes in sub-directories as well')
 	.option('-e, --filter <pattern>', 'notifies only when a file matching the pattern changes', convertToRegex, /.*/)
 	.option('-r, --run <cmd>', 'runs the given command when a change notice is generated')
-	.option('-f, --file <file>', '[REQUIRED] watches the given file|directory for changes')
+	.option('-f, --file <file>', 'watches the given file|directory for changes. Defaults to current directory', '.')
 	.option('-x, --exclude <pattern>', 'excludes directories matching this pattern from being watched', convertToRegex)
 	.option('-v, --verbose', 'prints detailed information during execution')
 	.parse(process.argv)
-
-// Perform filename validation
-if (!program.file)
-{
-	console.error('Please specify a file|directory to watch')
-	return
-}
 
 var commandExecutedHandler = function (error, stdout, stderr) {
 	console.log(stdout)
