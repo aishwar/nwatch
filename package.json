@@ -1,8 +1,12 @@
 {
 "name":"nwatch",
-"version":"0.1.0",
+"version":"0.0.1",
 "description":"Watch file system for change and execute shell command",
 "keywords":["watch","file","execute"],
 "author":"Aishwar Muthuraman <aishwar@gmail.com> (http://floatingpoint.ca/)",
-"main":"nwatch.js"
+"dependencies": {
+	"commander": ">= 0.6.0"
+},
+"main":"nwatch.js",
+"bin":"nwatch"
 }

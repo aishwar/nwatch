@@ -1,35 +1,19 @@
 /**
  * This is the structure we want:
- *   nwatch <dir> <runcmd>
+ *   nwatch [opts] --file <dir>
  *
  * Example:
- *   nwatch . build-all
+ *   nwatch --file . --filter *.(jade|styl) --run build-all
  * assuming build-all is an executable script
  *
  * Built for Windows, since I needed it. No fancy options, just what I need.
  */
 
+var program = require('commander')
 var path = require('path')
 var fs = require('fs')
 var exec = require('child_process').exec
-var args = process.argv.slice(2)
-
-// User inputs
-var filename = args[0]
-var shellcommand = args[1]
-
-// Validations
-if (!filename)
-{
-	console.error('Error: File to watch not specified')
-	return
-}
-
-if (!shellcommand)
-{
-	console.error('Error: Command to execute on file change not specified')
-	return
-}
+var version = '0.0.1'
 
 // Used to keep track of file operations
 var Events = {
@@ -61,6 +45,30 @@ var Events = {
 	}
 }
 
+var convertToRegex = function (rawExpr)
+{
+	return new RegExp(rawExpr
+					.replace('.','\\.')		// Make sure all dots are interpretted literally
+					.replace(/\*/g,'.*')	// Make sure * is converted to .*
+				)
+}
+
+program
+	.version(version)
+	.option('-e, --filter <expr>', 
+		'Notifies only when a file matching the filter changes. Useful when watching directories', 
+		convertToRegex, /.*/)
+	.option('-r, --run <cmd>', 'Runs the given command when a change notice is generated')
+	.option('-f, --file <file>', 'Watches this file|directory for changes')
+	.parse(process.argv)
+
+// Perform filename validation
+if (!program.file)
+{
+	console.error('Please specify a file|directory to watch')
+	return
+}
+
 var commandExecutedHandler = function (error, stdout, stderr) {
 	console.log(stdout)
 	stderr && console.log('Error: ', stderr)
@@ -69,14 +77,17 @@ var commandExecutedHandler = function (error, stdout, stderr) {
 // Used to debounce the shell command execution
 var debouncer = null
 var debouncedChangeHandler = function (event, filename) {
-	clearTimeout(debouncer)
-	Events.add(filename, event)
+	if (program.filter.test(filename))
+	{
+		clearTimeout(debouncer)
+		Events.add(filename, event)
 
-	debouncer = setTimeout(function () {
-		Events.print().clear()
-		exec(shellcommand, commandExecutedHandler)
-	}, 500)
+		debouncer = setTimeout(function () {
+			Events.print().clear()
+			program.run && exec(program.run, commandExecutedHandler)
+		}, 500)
+	}
 }
 
 // Core Execution
-fs.watch(path.resolve(filename), debouncedChangeHandler)
+fs.watch(path.resolve(program.file), debouncedChangeHandler)
